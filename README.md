@@ -28,7 +28,7 @@ There are also photos included of the hardware with the Oled! Please look them u
 - ESP32 dev board (ESP-32S, 38 pins)
 - DHT22 module (3 pins: `+`, `out`, `−`)
 - Breadboard and jumper wires
-- SSD1306 OLED (not used yet)
+- SSD1306 OLED
 
 ## Register map
 
