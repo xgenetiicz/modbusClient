@@ -14,6 +14,8 @@ DHT22  →  ESP32 (Modbus TCP server)  →  C client on my laptop  →  InfluxDB
 
 Later I might send the data to my home server through Tailscale, but I’ll see if that’s needed.
 
+There are also photos included of the hardware with the Oled! Please look them up at: [Photos](/Photos/fullBuild.jpeg)
+
 ## Status
 
 - [x] ESP32 reads the DHT22 and connects to wifi
