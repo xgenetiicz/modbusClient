@@ -3,6 +3,7 @@
 #include "secrets.h" //not for you
 #include <DHT.h> //library for dht
 #include <Adafruit_SSD1306.h> // This library is especially for the oled i have.
+#include <ModbusIP_ESP8266.h> // so the lbrary from the documentation does not support my esp32.
 
 //need to define values here so the esp32 can connect to internet
 //wifi setup to for my hotspot, and i will use defines from my secret.h
@@ -41,19 +42,21 @@ Adafruit_SSD1306 oledDisplay(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET); //
 DHT dht (DHTPIN, DHTTYPE);
 
 
+/*So on setup, i will also start the server there
+by using ModbusTCPServer.begin(); but i want also to create a object of it so i can check if the server is working.
+I also need to create a designated port for it so it can reach the protocol
+
+EDIT: No need for starting the server, the library has the wifiserver default on port 502
+*/ 
+ModbusIP modbus;
+
 void setup() {
-  //Debugging: It would not connect, and i am wondering if it doesnt find the hotspot. so i want to see that it did find with an for loop
-  WiFi.mode(WIFI_STA);
-  int networks = WiFi.scanNetworks();
-  Serial.printf("Found %d networks:\n",networks);
-  for (int i = 0; i < networks; i++) {
-    Serial.printf("  %s (%d dBm)\n", WiFi.SSID(i).c_str(), WiFi.RSSI(i));
-  }
 
   Serial.begin(115200);
   if (!oledDisplay.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
   Serial.printf("OLED not found\n"); //
   }
+
   oledDisplay.clearDisplay();
   oledDisplay.setTextColor(SSD1306_WHITE);
   oledDisplay.display();
@@ -68,6 +71,16 @@ void setup() {
     }
     Serial.printf("Wifi succesfully connected to: %s \n", WIFI_SSID);
     Serial.printf("IP Address is: %s \n",WiFi.localIP().toString().c_str()); // need to add format specifires because of getting ip to string, and the format specifier for string is %s.
+
+    //begin the server
+    modbus.server();
+    Serial.printf("Modbus TCP Server started\n");
+
+    //So the new way is to call the object and create the registers
+    modbus.addHreg(0,1234); //test value
+    modbus.addHreg(2,0); //temperature
+    modbus.addHreg(3,0); //humidity
+    modbus.addHreg(1,0); //uptime
 }
 
 void loop() {
@@ -77,7 +90,17 @@ void loop() {
     delay(15000);
     return;
   }
-  //Now if interned is reconnected, we will try to fetch temperature values from dht.
+
+  /*So i need to make a reference variable for the wifiserver so the esp32 understands that a client should connect
+  and that is by using the reference wifiServer(502) that has the port
+  So it should accept it and poll for modbus tcp requests while client is connected
+
+  EDIT: This was the old library, the new one just ask for modbus.task() and accept the client and et cetera.
+  */
+  modbus.task();
+  
+
+  //Now if internet is reconnected, we will try to fetch temperature values from dht.
   //And ofc, we need the values stored as float
   delay(3000); // delay this by three seconds so the dht can get the temperature
   float temperature = dht.readTemperature(); // i thought first this was get, but it is actually read. get is usually done with Java haha!
@@ -96,8 +119,7 @@ void loop() {
   oledDisplay.clearDisplay();
   oledDisplay.setTextSize(1,2); // this is not too big or too small on the oled.
   oledDisplay.setCursor(0, 0);
-  oledDisplay.printf("%s\n", WiFi.localIP().toString().c_str());
-  oledDisplay.printf("\n");
+  oledDisplay.printf("Modbus:\n %s\n", WiFi.localIP().toString().c_str());
   oledDisplay.printf("%.1f Celcius\n", temperature);
   oledDisplay.printf("%.1f %% Humidity\n", humidity);
   oledDisplay.display();
