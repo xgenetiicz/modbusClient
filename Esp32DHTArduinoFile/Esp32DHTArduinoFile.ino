@@ -110,11 +110,16 @@ void loop() {
   if(isnan(temperature) || isnan(fahrenheit) || isnan(humidity)) {
     Serial.printf("Failed to read from DHT22 Sensor, and could not retrieve data from temperature,fahrenheit and humidity\n");
     return;
-  } 
+  }
+  /*So i need to typecast the values since the registers can only hold whole numbers.
+  So I am going to typecast to signedInt since those values, temperature can hold negative values, but humidity can not
+  */
+  modbus.Hreg(2, (int16_t)roundf(temperature * 10)); //if 22,5 celcius = 22,5 * 10 = 225;
+  modbus.Hreg(3, (uint16_t)roundf(humidity * 10)); //if 55,6 % == 55,6 *10 = 560;
 
   Serial.printf("Temperature in Celcius: %.1f\n", temperature); //so it's a format specifier for like instead of 22.222 celcius -> 22.1 Celcius. Defining one desimal after the whole number.
   Serial.printf("Temperature in Fahrenheit: %.1f\n", fahrenheit);
-  Serial.printf("Humidity: %.1f\n", humidity);
+  Serial.printf("Humidity: %.1f%%\n", humidity);
 
   oledDisplay.clearDisplay();
   oledDisplay.setTextSize(1,2); // this is not too big or too small on the oled.
