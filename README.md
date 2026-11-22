@@ -20,6 +20,7 @@ There are also photos included of the hardware with the Oled! Please look them u
 
 - [x] ESP32 reads the DHT22 and connects to wifi
 - [x] ESP32 runs a Modbus TCP server
+- [x] Created my first TCP client in C. 
 - [ ] C client reads the registers 
 - [ ] Readings stored in InfluxDB
 
