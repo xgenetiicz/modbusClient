@@ -98,7 +98,7 @@ int main(int argc, char *argv[]){
 
     printf("Modbus buffer: \n");
     for (int i = 0; i < valread; i++) { // valread has stored the read of client, responsebuffer, and the size of the array
-        printf("%02X\n",responseBuffer[i]); //print the whole array
+        printf("%02X ",responseBuffer[i]); //print the whole array with spacing 
     }
 
     printf("\n");
