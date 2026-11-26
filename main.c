@@ -90,13 +90,18 @@ int main(int argc, char *argv[]){
     };
 
     //TODO: send() and recv() and then a for loop of the array of responseBuffer and the print the values in hex.
-    /*
-    send(client_fd,hello,strlen(hello),0);
-    printf("\n Hello message sent!\n");
-    valread = read(client_fd,responseBuffer,1024-1);
-    printf("%s\n",buffer);
-    */
-    
+    send(client_fd,request,sizeof(request),0);
+    printf("\n Sent Modbus Request\n");
+
+    //Now i need a for loop to print all the values and the hexadecimals from the responseBuffer
+    valread = read(client_fd,responseBuffer,sizeof(responseBuffer));
+
+    for (int i = 0; i < valread; i++) { // valread has stored the read of client, responsebuffer, and the size of the array
+        printf("%02X ",responseBuffer[i]); //print the whole array
+    }
+
+    printf("\n");
+
     //closing the connected socket
     close(client_fd);
     return 0;
