@@ -91,13 +91,14 @@ int main(int argc, char *argv[]){
 
     //TODO: send() and recv() and then a for loop of the array of responseBuffer and the print the values in hex.
     send(client_fd,request,sizeof(request),0);
-    printf("\n Sent Modbus Request\n");
+    printf("Sending Modbus Request..\n");
 
     //Now i need a for loop to print all the values and the hexadecimals from the responseBuffer
     valread = read(client_fd,responseBuffer,sizeof(responseBuffer));
 
+    printf("Modbus buffer: \n");
     for (int i = 0; i < valread; i++) { // valread has stored the read of client, responsebuffer, and the size of the array
-        printf("%02X ",responseBuffer[i]); //print the whole array
+        printf("%02X\n",responseBuffer[i]); //print the whole array
     }
 
     printf("\n");
