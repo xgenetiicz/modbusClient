@@ -77,8 +77,7 @@ int main(int argc, char *argv[]){
     
     //https://simplymodbus.ca/learn-tcp.html
     
-    //REMEMBER -> EACH REGISTER IS TWO BYTES = 16-BIT. but i need two arrays, this is first to build the 12 byte array, and later on i will have a uint8_t response[12] that get the responses and declare
-    //them in uint16 and int16
+    //REMEMBER -> EACH REGISTER IS TWO BYTES = 16-BIT. but i need two arrays, this is first to build the 12 byte array.
     uint8_t request[12] = { //MODBUS MBAP HEADER & MODBUS TCP/IP PDU
         0x00,0x01, // transaction Id
         0x00,0x00, // protocol id
@@ -90,6 +89,7 @@ int main(int argc, char *argv[]){
     };
 
     //TODO: send() and recv() and then a for loop of the array of responseBuffer and the print the values in hex.
+    //*DONE*
     send(client_fd,request,sizeof(request),0);
     printf("Sending Modbus Request..\n");
 
@@ -100,8 +100,39 @@ int main(int argc, char *argv[]){
     for (int i = 0; i < valread; i++) { // valread has stored the read of client, responsebuffer, and the size of the array
         printf("%02X ",responseBuffer[i]); //print the whole array with spacing 
     }
-
     printf("\n");
+
+    /*
+    Now i need to print the values into correct order as 16-bit.
+    I don't want to lose any values, but i want to get the bits that represents 1.
+    so therefore i should use | OR operator where this will check if the bits are represented as for example
+        0000 0101 //0x05
+        1111 0010 //0xF2
+    r = 1111 0111 //0xF7 for example
+    So the modbus protocol always use the big endian first! the high byte will always come first, and then the low byte will come later.
+    */ 
+
+    /*  Sending Modbus Request..
+        Modbus buffer:
+        00 01 00 00 00 0B 01 03 08 04 D2 00 00 00 D8 02 06
+
+        This is the result i got from the program, now the mbap header is 7 bytes. i = 0 -> 00 | i = 6 -> 01. So these are 7 elements = 7 bytes, each group of two hex digits are one byte. 
+        00 01 00 00 00 0B 01 -> MBAP HEADER (modbus application header) 7 bytes
+        the function code is i=7-> 03. 1 byte
+        the data address for the protocol is at element i = 8-> 08. This is a byte count, that counts databytes which will follow. I have 4 registers, so 2 bytes x 4 registers are 8 bytes.
+         AND FROM i = 9->04 are the 4 registries right from the esp32. 04D2=testvalue,0000=uptime, 00D8=temperature, 0206=humidity right.
+
+         so the response in total then have 7 (mbap header) + 1(function code) + 1 (byte count) + 8 bytes from the different registries = 17 bytes in total.
+    */
+    uint16_t testValue =(responseBuffer[9] << 8 | responseBuffer[10]); // high byte first (big-endian): shift it 8 bits to the left, then OR in the low byte, so both end up in one 16 bit value. OR for checking if there are any 1's
+    int16_t upTime =(responseBuffer[11] << 8 | responseBuffer[12]); //the uptime, but right now they are just 00 00; I haven't wrote the code in the arduino
+    int16_t temperature = (responseBuffer[13] << 8) | responseBuffer[14]; // 00 D8, and this as signed since the temperature can have negative values.
+    uint16_t humidity = (responseBuffer[15] << 8 | responseBuffer[16]); // 02 06, and this is unsigned since humidity cannot be negative.
+
+    printf("%u\n",testValue);
+    printf("%u\n",upTime);
+    printf("%.1f\n",temperature / 10.0);
+    printf("%.1f\n",humidity / 10.0);
 
     //closing the connected socket
     close(client_fd);
