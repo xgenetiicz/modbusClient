@@ -18,6 +18,7 @@ https://www.geeksforgeeks.org/c/socket-programming-cc/ - lot of information abou
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <stdlib.h> // for perror
 
 #define PORT 502 // SO THE MODBUS PORT BY DEFAULT IS 502.
 
@@ -66,9 +67,11 @@ int main(int argc, char *argv[]){
 
     status = connect(client_fd, (struct sockaddr *) &addr,sizeof(addr));
 
+    
+    //I need a perror to check the status
     if(status < 0) {
-        printf("\n Connection Failed \n");
-        return -1;
+        perror("TCP Connection failed");
+        exit(EXIT_FAILURE);
     }
 
     /*So here will i create the request for the different registers for the modbus protocol.
@@ -120,7 +123,7 @@ int main(int argc, char *argv[]){
         00 01 00 00 00 0B 01 -> MBAP HEADER (modbus application header) 7 bytes
         the function code is i=7-> 03. 1 byte
         the data address for the protocol is at element i = 8-> 08. This is a byte count, that counts databytes which will follow. I have 4 registers, so 2 bytes x 4 registers are 8 bytes.
-         AND FROM i = 9->04 are the 4 registries right from the esp32. 04D2=testvalue,0000=uptime, 00D8=temperature, 0206=humidity right.
+            AND FROM i = 9->04 are the 4 registries right from the esp32. 04D2=testvalue,0000=uptime, 00D8=temperature, 0206=humidity right.
 
          so the response in total then have 7 (mbap header) + 1(function code) + 1 (byte count) + 8 bytes from the different registries = 17 bytes in total.
     */
