@@ -18,7 +18,7 @@ https://www.geeksforgeeks.org/c/socket-programming-cc/ - lot of information abou
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <stdlib.h> // for perror
+#include <stdlib.h> // for exit(EXIT_FAILURE);
 
 #define PORT 502 // SO THE MODBUS PORT BY DEFAULT IS 502.
 
@@ -48,7 +48,7 @@ int main(int argc, char *argv[]){
     //AF_INET is the address family to specify ipv4 addresses. 
     //Sock stream is for reliable connection oriented tcp.
     if((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
-        perror("Could not create Socket\n");
+        perror("Could not create Socket");
         exit(EXIT_FAILURE);
     }
 
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]){
     addr.sin_family = AF_INET;
     addr.sin_port = htons(PORT); // host to network, and the port should be 502 because of modbus.
     if (inet_pton(AF_INET, argv[1], &addr.sin_addr) <= 0){ // point it to the addresss of the socket->EDIT: PASSED THE first argument to the program, where this should be the ip adress of the esp32!
-        perror("Invalid address/ Address not supported. \n"); 
+        fprintf(stderr,"Invalid address/ Address not supported.\n"); 
         exit(EXIT_FAILURE);
     }
     
@@ -78,7 +78,6 @@ int main(int argc, char *argv[]){
     */
     
     //https://simplymodbus.ca/learn-tcp.html
-    
     //REMEMBER -> EACH REGISTER IS TWO BYTES = 16-BIT. but i need two arrays, this is first to build the 12 byte array.
     uint8_t request[12] = { //MODBUS MBAP HEADER & MODBUS TCP/IP PDU
         0x00,0x01, // transaction Id
@@ -92,10 +91,16 @@ int main(int argc, char *argv[]){
 
     //TODO: send() and recv() and then a for loop of the array of responseBuffer and the print the values in hex.
     //*DONE*
-    send(client_fd,request,sizeof(request),0);
+    int sendResponse = send(client_fd,request,sizeof(request),0);
     printf("Sending Modbus Request..\n");
 
+    if(sendResponse == -1) {
+        perror("Could not send Modbus request");
+        exit(EXIT_FAILURE);
+    }
+
     //Now i need a for loop to print all the values and the hexadecimals from the responseBuffer
+    //TODO: Handling error for reading the buffer
     valread = read(client_fd,responseBuffer,sizeof(responseBuffer));
 
     printf("Modbus buffer: \n");
