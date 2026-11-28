@@ -48,16 +48,16 @@ int main(int argc, char *argv[]){
     //AF_INET is the address family to specify ipv4 addresses. 
     //Sock stream is for reliable connection oriented tcp.
     if((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0){
-        printf("\n Socket creation error \n");
-        return -1;
+        perror("Could not create Socket\n");
+        exit(EXIT_FAILURE);
     }
 
     memset(&addr,0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(PORT); // host to network, and the port should be 502 because of modbus.
     if (inet_pton(AF_INET, argv[1], &addr.sin_addr) <= 0){ // point it to the addresss of the socket->EDIT: PASSED THE first argument to the program, where this should be the ip adress of the esp32!
-        printf("\n Invalid address/ Address not supported. \n");
-        return -1; // return -1 stops the program.
+        perror("Invalid address/ Address not supported. \n"); 
+        exit(EXIT_FAILURE);
     }
     
     /*inet_pton is a presentation to network where this converts IPv4 or IPv6 address string 
@@ -67,7 +67,6 @@ int main(int argc, char *argv[]){
 
     status = connect(client_fd, (struct sockaddr *) &addr,sizeof(addr));
 
-    
     //I need a perror to check the status
     if(status < 0) {
         perror("TCP Connection failed");
